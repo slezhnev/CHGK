@@ -338,6 +338,7 @@ public class MainForm {
 				// Делаем +1 знатокам
 				experts++;
 				doCountRefresh();
+				doFormNextQuestion();
 			}
 		});
 		expertsPlusBtn.setForeground(Color.ORANGE);
@@ -350,6 +351,7 @@ public class MainForm {
 				// Делаем +1 зрителям
 				audience++;
 				doCountRefresh();
+				doFormNextQuestion();
 			}
 		});
 		audiencePlusBtn.setForeground(new Color(0, 128, 0));
