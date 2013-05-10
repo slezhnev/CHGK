@@ -15,7 +15,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -27,9 +30,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -53,7 +59,6 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 import com.jgoodies.looks.LookUtils;
 import com.jgoodies.looks.Options;
-import javax.swing.JSeparator;
 
 public class MainForm {
 
@@ -118,9 +123,9 @@ public class MainForm {
 	 */
 	private JCheckBox questionR;
 	/**
-	 * Label типа времени
+	 * Кнопка начала отсчета
 	 */
-	private JLabel timeTypeLabel;
+	private JToggleButton timeBtn;
 	/**
 	 * Результат игры - знатоки
 	 */
@@ -283,34 +288,21 @@ public class MainForm {
 		gbc_showAnswerBtn.gridy = 0;
 		showAnswerPanel.add(showAnswerBtn, gbc_showAnswerBtn);
 
-		JLabel timeCaption = new JLabel("Время");
-		timeCaption.setEnabled(false);
-		timeCaption.setVerticalAlignment(SwingConstants.TOP);
-		timeCaption.setHorizontalAlignment(SwingConstants.CENTER);
-		timeCaption.setFont(new Font("Tahoma", Font.BOLD, 16));
-		GridBagConstraints gbc_timeCaption = new GridBagConstraints();
-		gbc_timeCaption.insets = new Insets(0, 0, 5, 0);
-		gbc_timeCaption.fill = GridBagConstraints.BOTH;
-		gbc_timeCaption.gridx = 1;
-		gbc_timeCaption.gridy = 0;
-		showAnswerPanel.add(timeCaption, gbc_timeCaption);
-
-		timeTypeLabel = new JLabel("чтение вопроса");
-		timeTypeLabel.setEnabled(false);
-		timeTypeLabel.setFont(new Font("Tahoma", Font.BOLD, 14));
-		GridBagConstraints gbc_timeTypeLabel = new GridBagConstraints();
-		gbc_timeTypeLabel.insets = new Insets(0, 0, 5, 0);
-		gbc_timeTypeLabel.gridx = 1;
-		gbc_timeTypeLabel.gridy = 1;
-		showAnswerPanel.add(timeTypeLabel, gbc_timeTypeLabel);
-
-		JLabel timeLabel = new JLabel("00");
-		timeLabel.setEnabled(false);
-		timeLabel.setFont(new Font("Tahoma", Font.BOLD, 42));
-		GridBagConstraints gbc_timeLabel = new GridBagConstraints();
-		gbc_timeLabel.gridx = 1;
-		gbc_timeLabel.gridy = 2;
-		showAnswerPanel.add(timeLabel, gbc_timeLabel);
+		timeBtn = new JToggleButton(
+				"<html><center><b>Время:</b><br>00 сек.</center></html>");
+		timeBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				doTiming(true);
+			}
+		});
+		timeBtn.setFont(new Font("Tahoma", Font.PLAIN, 35));
+		GridBagConstraints gbc_timeBtn = new GridBagConstraints();
+		gbc_timeBtn.fill = GridBagConstraints.BOTH;
+		gbc_timeBtn.gridheight = 3;
+		gbc_timeBtn.insets = new Insets(0, 0, 0, 5);
+		gbc_timeBtn.gridx = 1;
+		gbc_timeBtn.gridy = 0;
+		showAnswerPanel.add(timeBtn, gbc_timeBtn);
 		showAnswerBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -536,6 +528,77 @@ public class MainForm {
 	}
 
 	/**
+	 * Время для отображения на таймере
+	 */
+	private volatile int seconds = 0;
+	private Timer timer = null;
+
+	/**
+	 * Запуск минутного отсчета
+	 * 
+	 * @param start
+	 *            Начать или остановить отсчет
+	 */
+	private void doTiming(final boolean start) {
+		if (start) {
+			seconds = 60;
+			timeBtn.setSelected(true);
+			timeBtn.setText("<html><center><b>Время:</b><br>60</center></html>");
+			// Запускаем таск
+			timer = new Timer();
+			timer.scheduleAtFixedRate(new TimerTask() {
+
+				@Override
+				public void run() {
+					seconds--;
+					if (seconds < 0) {
+						this.cancel();
+					} else {
+						// Обновляем timeBtn
+						try {
+							SwingUtilities.invokeAndWait(new Runnable() {
+
+								@Override
+								public void run() {
+									StringBuffer str = new StringBuffer(
+											"<html><center><b>Время:</b><br>");
+									if (seconds < 10) {
+										str.append("<font color=red>")
+												.append(seconds)
+												.append("</font>");
+									} else if (seconds < 20) {
+										str.append("<font color=yellow>")
+												.append(seconds)
+												.append("</font>");
+									} else {
+										str.append(seconds);
+									}
+									str.append("</center></html>");
+									timeBtn.setText(str.toString());
+								}
+
+							});
+						} catch (InvocationTargetException e) {
+							this.cancel();
+						} catch (InterruptedException e) {
+							// Do nothing
+						}
+					}
+				}
+
+			}, 1000, 1000);
+		} else {
+			if (timer != null) {
+				timer.cancel();
+			}
+			timer = null;
+			timeBtn.setSelected(false);
+			timeBtn.setText("<html><center>Начать<br>обсуждение</center></html>");
+			timer = null;
+		}
+	}
+
+	/**
 	 * Выполнение пересотировки вопросов
 	 */
 	protected void doMakeQuestionResort() {
@@ -600,6 +663,8 @@ public class MainForm {
 		// Вырубаем отображение
 		CardLayout cl = (CardLayout) showAnswerCardPanel.getLayout();
 		cl.show(showAnswerCardPanel, answerBtnCard);
+		// Собрасываем состояние кнопки отсчета времени
+		doTiming(false);
 		// Генерируем вопрос
 		// Формируем тип искомого вопроса
 		int questionKind = 0;

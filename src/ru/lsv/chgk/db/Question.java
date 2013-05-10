@@ -365,6 +365,9 @@ public class Question {
 
 		Style bold = doc.addStyle("bold", regular);
 		StyleConstants.setBold(bold, true);
+
+		Style questionStyle = doc.addStyle("question", regular);
+		StyleConstants.setFontSize(questionStyle, 20);
 		//
 		try {
 			// Автор
@@ -380,7 +383,7 @@ public class Question {
 			if (question != null) {
 				doc = parseSoundAndImages(question, doc, listener);
 			} else {
-				doc.insertString(doc.getLength(), "\n", regular);
+				doc.insertString(doc.getLength(), "\n", questionStyle);
 			}
 			// Чемпионат
 			doc.insertString(doc.getLength(), "\n", regular);
@@ -455,6 +458,9 @@ public class Question {
 
 		Style bold = doc.addStyle("bold", regular);
 		StyleConstants.setBold(bold, true);
+
+		Style questionStyle = doc.addStyle("question", regular);
+		StyleConstants.setFontSize(questionStyle, 20);
 		//
 		try {
 			// Ответ
@@ -462,7 +468,7 @@ public class Question {
 			if (answer != null) {
 				doc = parseSoundAndImages(answer, doc, listener);
 			} else {
-				doc.insertString(doc.getLength(), "\n", regular);
+				doc.insertString(doc.getLength(), "\n", questionStyle);
 			}
 			// Комментарий
 			doc.insertString(doc.getLength(), "\n", regular);
@@ -512,7 +518,7 @@ public class Question {
 			while (text.indexOf(img) > -1) {
 				int pos = text.indexOf(img);
 				doc.insertString(doc.getLength(), text.substring(0, pos),
-						doc.getStyle("regular"));
+						doc.getStyle("question"));
 				text = text.substring(pos + img.length());
 				int last = text.indexOf(")");
 				if (last != -1) {
@@ -532,7 +538,7 @@ public class Question {
 			while (text.indexOf(audio) > -1) {
 				int pos = text.indexOf(audio);
 				doc.insertString(doc.getLength(), text.substring(0, pos),
-						doc.getStyle("regular"));
+						doc.getStyle("question"));
 				text = text.substring(pos + audio.length());
 				int last = text.indexOf(")");
 				if (last != -1) {
@@ -556,7 +562,7 @@ public class Question {
 					text = text.substring(last + 1);
 				}
 			}
-			doc.insertString(doc.getLength(), text, doc.getStyle("regular"));
+			doc.insertString(doc.getLength(), text, doc.getStyle("question"));
 		} catch (BadLocationException e) {
 			// Do nothing
 		}
